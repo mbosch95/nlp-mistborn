@@ -25,6 +25,12 @@ def output_results(path, res):
     with open(path, 'w') as f:
         f.write(prettyfier.pformat(res))
 
+def process_results(path):
+    file = open(path, "r")
+    contents = file.read()
+    return literal_eval(contents)
+
+
 def reducer_function(func, text, **kwargs):
     reducer = {
         SENTENCE_REDUCER: reduce_to_sentences,

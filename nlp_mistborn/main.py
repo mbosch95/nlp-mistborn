@@ -1,9 +1,12 @@
 import en_core_web_sm
+import spacy
 
-from bridge import RECURSIVE_REDUCER, SENTENCE_REDUCER, reducer_function, read_book, output_results, process_common_words
+from bridge import RECURSIVE_REDUCER, SENTENCE_REDUCER, reducer_function, read_book, output_results, process_common_words, process_results
+from output import print_image, word_cloud, print_bar
 
 
 PERSON = 'PERSON'
+LOCATION = 'LOC'
 COMMON_WORDS_PATH = './files/common_words.txt'
 
 def get_labeled(res, label):
@@ -36,16 +39,24 @@ if __name__ == '__main__':
     output_path = './nlp_mistborn/res.txt'
     max_len = 1000000
     reducer = RECURSIVE_REDUCER
-    n_characters = 20
+    n_characters, n_locations = 20, 3
 
-    nlp = en_core_web_sm.load()
+    nlp = spacy.load('en_core_web_sm')
 
 
     book = read_book(input_path)
     sections = reducer_function(reducer, book, max_len=max_len)
 
     entities = get_entities(sections)
-    characters = get_labeled(entities, PERSON)
-    main_characters = get_mains(characters, n_characters)
 
-    output_results(output_path, characters)
+    characters = get_labeled(entities, PERSON)
+    locations = get_labeled(entities, LOCATION)
+
+    main_characters = get_mains(characters, n_characters)
+    main_locations = get_mains(locations, n_locations)
+
+    output_results(output_path, main_characters)
+
+    data = process_results(output_path)
+    print_bar(data)
+    print_image(word_cloud(data))

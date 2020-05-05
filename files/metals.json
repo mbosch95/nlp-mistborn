@@ -1,0 +1,50 @@
+{
+    "metals": {
+        "basic metals": {
+            "physical": {
+                "pushing": ["steel", "pewter"],
+                "pulling": ["iron", "tin"]
+            },
+            "mental": {
+                "pushing": ["bronze", "brass"],
+                "pulling": ["copper", "zinc"]
+            },
+            "higher": {
+                "pushing": ["electrum", "bendalloy"],
+                "pulling": ["gold", "cadmium"]
+            },
+            "enhancement": {
+                "pushing": ["duralluminum", "nicrosil"],
+                "pulling": ["alluminum", "chromium"]
+            },
+            "god": {
+                "pushing": ["atium"],
+                "pulling": ["atium"]
+            }
+        }
+    },
+
+    "users": {
+        "lurcher": ["iron"],
+        "coinshot": ["steel"],
+        "tineyes": ["tin"],
+        "pewterarm": ["pewter"],
+        "thug": ["pewter"],
+        "rioters": ["zinc"],
+        "soothers": ["brass"],
+        "coppercloud": ["copper"],
+        "smoker": ["copper"],
+        "seekers": ["bronze"],
+        "pulser": ["cadmium"],
+        "slider": ["bendalloy"],
+        "augur": ["gold"],
+        "oracle": ["electrum"],
+        "leecher": ["chromium"],
+        "nicroburst": ["nicrosil"],
+        "aluminum gnat": ["aluminum"],
+        "duraluminum gnat": ["duraluminum"],
+        "seer": ["atium"],
+        "mistborn": ["iron", "steel", "tin", "pewter", "zinc", "brass", "copper", "bronze", "cadmium", "bendalloy", "gold", "electrum", "chromium", "nicrosil", "aluminum", "duraluminum", "atium"]
+    }
+
+}

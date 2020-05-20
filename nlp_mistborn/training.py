@@ -1,96 +1,106 @@
-import re
-import snorkel.labeling as snlb
-import pandas as pd
+import spacy
+import random
 
 import training_data as td
 
 
-def make_labeling_metals(key, value):
-    @snlb.labeling_function(name=f'{key}_function')
-    def f(data):
-        text = data.text.lower()
+def create_blank_nlp(labels):
+    nlp = spacy.blank('en')
+    textcat = nlp.create_pipe(
+                "textcat", config={"exclusive_classes": True, "architecture": "simple_cnn"}
+            )
+    nlp.add_pipe(textcat, last=True)
 
-        allomancy_pattern = r'|'.join(rf'{i}' for i in td.ALLOMANCY)
-        allomancy_regex = re.compile(allomancy_pattern, flags=re.I | re.X)
-        combination_pattern = r'|'.join(rf'{key}-*{i}' for i in td.ALLOMANCY)
-        combination_regex = re.compile(combination_pattern, flags=re.I | re.X)
-        metal_regex = re.compile(rf'\b{key}\b', flags=re.I | re.X)
+    for label in labels:
+        textcat.add_label('ABSTAIN')
+        textcat.add_label(label)
 
+    return nlp, textcat
 
-        if not allomancy_regex.findall(text):
-            return td.ABSTAIN
+def evaluate(tokenizer, textcat, texts, cats):
+    docs = (tokenizer(text) for text in texts)
+    tp = 0.0  # True positives
+    fp = 1e-8  # False positives
+    fn = 1e-8  # False negatives
+    tn = 0.0  # True negatives
+    for i, doc in enumerate(textcat.pipe(docs)):
+        gold = cats[i]
+        for label, score in doc.cats.items():
+            if label not in gold:
+                continue
+            if label == "NEGATIVE":
+                continue
+            if score >= 0.5 and gold[label] >= 0.5:
+                tp += 1.0
+            elif score >= 0.5 and gold[label] < 0.5:
+                fp += 1.0
+            elif score < 0.5 and gold[label] < 0.5:
+                tn += 1
+            elif score < 0.5 and gold[label] >= 0.5:
+                fn += 1
+    precision = tp / (tp + fp)
+    recall = tp / (tp + fn)
+    if (precision + recall) == 0:
+        f_score = 0.0
+    else:
+        f_score = 2 * (precision * recall) / (precision + recall)
+    return {"textcat_p": precision, "textcat_r": recall, "textcat_f": f_score}
 
-        if metal_regex.findall(text) or combination_regex.findall(text):
-            return value
+print("Loading data...")
+data_path = './res/training_data.txt'
+with open(data_path, 'r') as f:
+     data = eval(f.read())
+     texts, cats = data
 
-        return td.ABSTAIN
-    return f
+n_texts = len(texts)
 
-def make_labeling_users(key, value):
-    @snlb.labeling_function(name=f'{key}_function')
-    def f(data):
-        text = data.text.lower()
+shuffler = list(zip(texts, cats))
+random.shuffle(shuffler)
+texts, cats = zip(*shuffler)
 
-        allomancy_pattern = r' | '.join(rf'{i}' for i in td.ALLOMANCY)
-        allomancy_regex = re.compile(allomancy_pattern, flags=re.I | re.X)
+train_texts = texts[:int(n_texts * 0.5)]
+train_cats = cats[:int(n_texts * 0.5)]
+dev_texts = texts[int(n_texts * 0.5):]
+dev_cats = cats[int(n_texts * 0.5):]
 
-        if not allomancy_regex.findall(text):
-            return td.ABSTAIN
+nlp, textcat = create_blank_nlp(td.CLASSES.values())
 
-        if key in data.text.lower():
-            return value
-
-        return td.ABSTAIN
-    return f
-
-lfs = list()
-
-for key, value in td.METALS.items():
-    lfs.append(make_labeling_metals(key, value))
-
-for key, value in td.USERS.items():
-    lfs.append(make_labeling_users(key, value))
-
-def get_L_train(sections):
-    data = {key: td.ABSTAIN for key in td.METALS.values()}
-    data['text'] = sections
-    data['label'] = False
-    df_train = pd.DataFrame(data=data)
-
-    applier = snlb.PandasLFApplier(lfs=lfs)
-    L_train = applier.apply(df=df_train)
-
-    for i, function_results in enumerate(L_train):
-        for function_result in function_results:
-            if function_result != -1:
-                df_train.at[i, function_result] = function_result
-                df_train.at[i, 'label'] = True
-
-    return df_train, L_train
-
-def get_analysis(L_train):
-    return snlb.LFAnalysis(L=L_train, lfs=lfs).lf_summary()
-
-
-def generate_training_data(df):
-    rv = list()
-
-    for _, row in df.iterrows():
-        instance = (row['text'], [(0, len(row['text']), 'ALLOMANCY')])
-        rv.append(instance)
-
-    return rv
+print(
+    "Using {} examples ({} training, {} evaluation)".format(
+        n_texts, len(train_texts), len(dev_texts)
+    )
+)
+train_data = list(zip(train_texts, [{"cats": cats} for cats in train_cats]))
 
 
-def test(sections):
-    output_path = './res/training.csv'
-    output_path = './res/training_data.txt'
 
-    df, res = get_L_train(sections)
-    analysis = get_analysis(res)
-    res = df.query('label == True')
-    rv = generate_training_data(res)
-    with open(output_path, 'w') as f:
-        f.write(str(rv))
-    return rv
-    # res.to_csv(path_or_buf=output_path)
+pipe_exceptions = ["textcat", "trf_wordpiecer", "trf_tok2vec"]
+other_pipes = [pipe for pipe in nlp.pipe_names if pipe not in pipe_exceptions]
+with nlp.disable_pipes(*other_pipes):
+    optimizer = nlp.begin_training()
+    print("Training the model...")
+    print("{:^5}\t{:^5}\t{:^5}\t{:^5}".format("LOSS", "P", "R", "F"))
+    batch_sizes = spacy.util.compounding(4.0, 32.0, 1.001)
+    for i in range(20):
+        losses = {}
+        # batch up the examples using spaCy's minibatch
+        random.shuffle(train_data)
+        batches = spacy.util.minibatch(train_data, size=batch_sizes)
+        for batch in batches:
+            texts, annotations = zip(*batch)
+            nlp.update(texts, annotations, sgd=optimizer, drop=0.2, losses=losses)
+        with textcat.model.use_params(optimizer.averages):
+            # evaluate on the dev data split off in load_data()
+            scores = evaluate(nlp.tokenizer, textcat, dev_texts, dev_cats)
+        print(
+            "{0:.3f}\t{1:.3f}\t{2:.3f}\t{3:.3f}".format(
+                losses["textcat"],
+                scores["textcat_p"],
+                scores["textcat_r"],
+                scores["textcat_f"],
+            )
+        )
+    
+    output_dir = './res/complete_model'
+    nlp.to_disk(output_dir)
+

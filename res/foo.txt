@@ -1,0 +1,53 @@
+ ('Kelsier '
+  'Pushed, '
+  'throwing '
+  'Bilg '
+  'backward.',
+  {'ABSTAIN': 4.489649096939274e-09,
+   'ALUMINUM': 0.0,
+   'ATIUM': 1.379500643091111e-30,
+   'BENDALLOY': 0.0,
+   'BRASS': 0.0,
+   'BRONZE': 5.825548504080256e-17,
+   'CADMIUM': 0.0,
+   'CHROMIUM': 0.0,
+   'COPPER': 2.39482710438172e-16,
+   'DURALUMINUM': 0.0,
+   'ELECTRUM': 0.0,
+   'GOLD': 0.0,
+   'IRON': 0.019807809963822365,
+   'NICROSIL': 0.0,
+   'PEWTER': 1.4776228375777703e-17,
+   'STEEL': 0.9801921844482422,
+   'TIN': 5.589031924352356e-18,
+   'ZINC': 0.0}),
+
+
+ ('Part '
+  'of '
+  'her—the '
+  'Vin '
+  'part—wanted '
+  'to '
+  'scurry '
+  'away '
+  'and '
+  'hide.',
+  {'ABSTAIN': 0.33566707372665405,
+   'ALUMINUM': 0.0,
+   'ATIUM': 1.0731920014857296e-16,
+   'BENDALLOY': 0.0,
+   'BRASS': 0.0,
+   'BRONZE': 0.14920954406261444,
+   'CADMIUM': 0.0,
+   'CHROMIUM': 0.0,
+   'COPPER': 0.5050891041755676,
+   'DURALUMINUM': 0.0,
+   'ELECTRUM': 0.0,
+   'GOLD': 0.0,
+   'IRON': 8.754655334008987e-11,
+   'NICROSIL': 0.0,
+   'PEWTER': 8.528917849748296e-11,
+   'STEEL': 2.621025618765316e-10,
+   'TIN': 0.010034316219389439,
+   'ZINC': 2.333484241747615e-40}),

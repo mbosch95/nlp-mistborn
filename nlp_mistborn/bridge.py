@@ -46,3 +46,16 @@ def reduce_to_fit(text, **kwargs):
 
 def reduce_to_sentences(text, **kwargs):
     return sent_tokenize(text)
+
+def process_classification(res, p, *args):
+    rv = list()
+    for instance in res:
+        labels = list()
+        for key, value in instance[1].items():
+            if value >= p:
+                labels.append(key)
+
+        if not any(arg in labels for arg in args):
+            rv.append((instance[0], labels))
+
+    return rv

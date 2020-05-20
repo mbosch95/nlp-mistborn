@@ -1,0 +1,26 @@
+{
+  "exclusive_classes":true,
+  "architecture":"simple_cnn",
+  "labels":[
+    "ABSTAIN",
+    "IRON",
+    "STEEL",
+    "TIN",
+    "PEWTER",
+    "ZINC",
+    "BRASS",
+    "COPPER",
+    "BRONZE",
+    "CADMIUM",
+    "BENDALLOY",
+    "GOLD",
+    "ELECTRUM",
+    "CHROMIUM",
+    "NICROSIL",
+    "ALUMINUM",
+    "DURALUMINUM",
+    "ATIUM"
+  ],
+  "pretrained_vectors":null,
+  "pretrained_dims":null
+}
